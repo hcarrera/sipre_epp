@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#b91c1c">
+    <meta name="description" content="Sistema de Revisión y Control de Prendas (EPP) - Cuerpo de Bomberos de Quito">
+    <title>SIPRE PWA - Control de EPP | CBDMQ</title>
+    <style>
+        :root {
+            --rojo-bombero: #b91c1c;
+            --rojo-oscuro: #7f1d1d;
+            --amarillo-alerta: #f59e0b;
+            --gris-fondo: #f3f4f6;
+            --gris-borde: #d1d5db;
+            --texto-oscuro: #1f2937;
+            --blanco: #ffffff;
+            --verde-ok: #15803d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--gris-fondo);
+            color: var(--texto-oscuro);
+            line-height: 1.5;
+        }
+
+        .hidden { display: none !important; }
+
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-ok { background: #dcfce7; color: var(--verde-ok); }
+        .badge-warn { background: #fef3c7; color: #b45309; }
+        .badge-danger { background: #fee2e2; color: var(--rojo-bombero); }
+
+        /* LOGIN */
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--rojo-oscuro), #111827);
+            padding: 1rem;
+        }
+
+        .login-card {
+            background: var(--blanco);
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            width: 100%;
+            max-width: 400px;
+            border-top: 6px solid var(--amarillo-alerta);
+        }
+
+        .login-card h1 {
+            color: var(--rojo-bombero);
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 0.2rem;
+        }
+
+        .login-card p {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-help {
+            margin-top: 0.85rem;
+            font-size: 0.8rem;
+            color: #4b5563;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 0.6rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.65rem;
+            border: 1px solid var(--gris-borde);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--rojo-bombero);
+            box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.15);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+            text-align: center;
+        }
+
+        .btn-primary { background: var(--rojo-bombero); color: var(--blanco); width: 100%; }
+        .btn-primary:hover { background: var(--rojo-oscuro); }
+        .btn-secondary { background: #374151; color: var(--blanco); }
+        .btn-secondary:hover { background: #1f2937; }
+        .btn-success { background: var(--verde-ok); color: var(--blanco); }
+        .btn-success:hover { background: #166534; }
+        .btn-install {
+            background: var(--amarillo-alerta);
+            color: #111827;
+            padding: 0.4rem 0.85rem;
+            font-size: 0.85rem;
+        }
+
+        /* HEADER & NAV */
+        header {
+            background: var(--rojo-bombero);
+            color: var(--blanco);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-title h1 { font-size: 1.4rem; letter-spacing: 0.5px; }
+        .header-title span { font-size: 0.85rem; opacity: 0.9; }
+
+        .nav-tabs {
+            background: var(--rojo-oscuro);
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            background: transparent;
+            color: rgba(255,255,255,0.8);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover { background: rgba(255,255,255,0.1); color: var(--blanco); }
+        .nav-tab.active { background: var(--blanco); color: var(--rojo-bombero); }
+
+        /* CONTENEDOR PRINCIPAL */
+        .container {
+            max-width: 1200px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: var(--blanco);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--gris-borde);
+        }
+
+        .card-header {
+            border-bottom: 2px solid var(--gris-fondo);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.15rem;
+            color: var(--rojo-bombero);
+            text-transform: uppercase;
+        }
+
+        .grid-datos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .prendas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.25rem;
+        }
+
+        fieldset.prenda-box {
+            border: 1px solid var(--gris-borde);
+            border-radius: 8px;
+            padding: 1.25rem;
+            background: #fafafa;
+            transition: opacity 0.2s, border-color 0.2s;
+        }
+
+        fieldset.prenda-box.alerta-cambio {
+            border: 2px solid var(--rojo-bombero);
+            background: #fef2f2;
+        }
+
+        fieldset.prenda-box legend {
+            background: var(--texto-oscuro);
+            color: var(--blanco);
+            padding: 0.25rem 0.85rem;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .row-inline {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .row-inline label.lbl-title {
+            font-weight: 600;
+            min-width: 85px;
+            font-size: 0.88rem;
+        }
+
+        .radio-group, .check-group {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            font-size: 0.88rem;
+        }
+
+        .radio-group label, .check-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+        }
+
+        .sub-fields {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed var(--gris-borde);
+        }
+
+        .sub-fields.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .select-sm {
+            padding: 0.35rem 0.5rem;
+            border: 1px solid var(--gris-borde);
+            border-radius: 4px;
+            font-size: 0.88rem;
+            background: var(--blanco);
+        }
+
+        textarea.obs-box {
+            width: 100%;
+            margin-top: 0.4rem;
+            padding: 0.5rem;
+            border: 1px solid var(--gris-borde);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            resize: vertical;
+        }
+
+        .nfpa-warning {
+            font-size: 0.78rem;
+            color: var(--rojo-bombero);
+            font-weight: bold;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .table-responsive { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gris-borde);
+        }
+        th { background: var(--gris-fondo); font-weight: 600; }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE LOGIN -->
+    <section id="login-screen" class="login-wrapper">
+        <div class="login-card">
+            <h1>SIPRE</h1>
+            <p>Sistema de Revisión y Control de Prendas<br><strong>Cuerpo de Bomberos de Quito</strong></p>
+            <form id="form-login">
+                <div class="form-group">
+                    <label for="username">Usuario Institucional:</label>
+                    <input type="text" id="username" class="form-control" placeholder="Ej. hcarrera" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" class="form-control" placeholder="Cualquier clave de prueba">
+                </div>
+                <button type="submit" id="btn-ingresar" class="btn btn-primary">Ingresar al Sistema</button>
+            </form>
+            <div class="login-help">
+                Modo de prueba local: ingresa cualquier usuario y clave (opcional) para acceder.
+            </div>
+        </div>
+        <footer style="color: rgba(255,255,255,0.7);">
+            Copyright © 2026 - Todos los derechos reservados a Hugo Carrera | PWA v2.2
+        </footer>
+    </section>
+
+    <!-- APLICACIÓN PRINCIPAL -->
+    <section id="app-screen" class="hidden">
+        <header>
+            <div class="header-top">
+                <div class="header-title">
+                    <h1>SIPRE — Control de Equipo de Protección Personal</h1>
+                    <span>Cuerpo de Bomberos del Distrito Metropolitano de Quito</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <button type="button" id="btn-instalar-pwa" class="btn btn-install hidden">📲 Instalar App</button>
+                    <span id="estado-red" class="badge badge-ok">● Online</span>
+                    <span id="user-display" style="font-size: 0.9rem;">Inspector: <strong>-</strong></span>
+                    <button type="button" id="btn-logout" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Salir</button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button type="button" class="nav-tab active" data-tipo="Estructural">🔥 Equipo Estructural</button>
+            <button type="button" class="nav-tab" data-tipo="Forestal">🌲 Equipo Forestal</button>
+            <button type="button" class="nav-tab" data-tipo="Táctico / USAR">⛑️ Equipo Táctico / USAR</button>
+            <button type="button" class="nav-tab" data-tipo="Historial">📋 Registros Guardados (<span id="count-registros">0</span>)</button>
+        </nav>
+
+        <main class="container">
+            <!-- VISTA DE FORMULARIO DE INSPECCIÓN -->
+            <div id="vista-formulario">
+                <form id="form-inspeccion">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>1. Datos del Personal Evaluado — Modalidad: <span id="titulo-modalidad">Estructural</span></h2>
+                            <span class="badge badge-warn">Normativa Ref: NFPA 1851</span>
+                        </div>
+                        <div class="grid-datos">
+                            <div class="form-group">
+                                <label for="bombero_nombre">Grado y Nombre Completo *</label>
+                                <input type="text" id="bombero_nombre" class="form-control" placeholder="Ej. B1. Juan Pérez" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bombero_cedula">Cédula / Código *</label>
+                                <input type="text" id="bombero_cedula" class="form-control" placeholder="Ej. 1712345678" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bombero_estacion">Estación / Compañía *</label>
+                                <select id="bombero_estacion" class="form-control" required>
+                                    <option value="">Seleccione estación...</option>
+                                    <option value="Estación 1 - Centro Histórico">Estación 1 - Centro Histórico</option>
+                                    <option value="Estación 2 - La Mariscal">Estación 2 - La Mariscal</option>
+                                    <option value="Estación 4 - Chimbacalle">Estación 4 - Chimbacalle</option>
+                                    <option value="Estación 8 - El Bosque">Estación 8 - El Bosque</option>
+                                    <option value="Estación 10 - Quitumbe">Estación 10 - Quitumbe</option>
+                                    <option value="Grupo USAR / Especiales">Grupo USAR / Operaciones Especiales</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha_inspeccion">Fecha de Revisión *</label>
+                                <input type="date" id="fecha_inspeccion" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>2. Inspección Física de Prendas</h2>
+                            <small style="color: #6b7280;">* Equipos con >10 años de fabricación requieren retiro automático (NFPA 1851).</small>
+                        </div>
+                        <div id="contenedor-prendas" class="prendas-grid"></div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-bottom: 2rem;">
+                        <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
+                        <button type="submit" class="btn btn-success">💾 Guardar Inspección</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- VISTA DE HISTORIAL -->
+            <div id="vista-historial" class="hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Historial de Revisiones Realizadas</h2>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button type="button" id="btn-exportar-csv" class="btn btn-success" style="padding: 0.45rem 0.9rem; font-size: 0.85rem;">📥 Exportar a Excel (CSV)</button>
+                            <button type="button" id="btn-borrar-todo" class="btn btn-primary" style="padding: 0.45rem 0.9rem; font-size: 0.85rem;">🗑️ Limpiar Historial</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="tabla-historial">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Modalidad</th>
+                                    <th>Bombero</th>
+                                    <th>Estación</th>
+                                    <th>Prendas con Cambio / Alerta</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            Copyright © 2026 - Sistema SIPRE | Desarrollado por Hugo Carrera | Cuerpo de Bomberos de Quito
+        </footer>
+    </section>
+
+    <script>
+        // --- CONFIGURACIÓN PWA SEGURA ---
+        (function configurarPWA() {
+            try {
+                const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="36" fill="#b91c1c"/><path d="M96 34c-24 28-46 48-46 80a46 46 0 0 0 92 0c0-32-22-52-46-80zm0 108a24 24 0 0 1-24-24c0-15 11-26 24-41 13 15 24 26 24 41a24 24 0 0 1-24 24z" fill="#f59e0b"/></svg>`;
+                const iconUrl = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgIcon)));
+
+                const manifestData = {
+                    name: "SIPRE - Control de EPP Bomberos",
+                    short_name: "SIPRE EPP",
+                    description: "Sistema de Revisión y Control de Equipo de Protección Personal",
+                    start_url: "./",
+                    display: "standalone",
+                    background_color: "#7f1d1d",
+                    theme_color: "#b91c1c",
+                    orientation: "portrait-primary",
+                    icons: [
+                        { src: iconUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+                        { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+                    ]
+                };
+
+                const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: "application/manifest+json" });
+                const manifestLink = document.createElement("link");
+                manifestLink.rel = "manifest";
+                manifestLink.href = URL.createObjectURL(manifestBlob);
+                document.head.appendChild(manifestLink);
+
+                if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+                    const swCode = `
+                        const CACHE_NAME = 'sipre-pwa-v2';
+                        self.addEventListener('install', event => {
+                            event.waitUntil(
+                                caches.open(CACHE_NAME).then(cache => cache.addAll([self.location.href]))
+                            );
+                            self.skipWaiting();
+                        });
+                        self.addEventListener('activate', event => {
+                            event.waitUntil(
+                                caches.keys().then(keys => Promise.all(
+                                    keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+                                ))
+                            );
+                            self.clients.claim();
+                        });
+                        self.addEventListener('fetch', event => {
+                            event.respondWith(
+                                caches.match(event.request).then(resp => resp || fetch(event.request).catch(() => caches.match('./')))
+                            );
+                        });
+                    `;
+                    const swBlob = new Blob([swCode], { type: "application/javascript" });
+                    const swUrl = URL.createObjectURL(swBlob);
+                    navigator.serviceWorker.register(swUrl).catch(() => {});
+                }
+            } catch (err) {
+                console.warn("PWA no iniciada en este contexto:", err);
+            }
+        })();
+
+        let deferredPrompt;
+        const btnInstalar = document.getElementById("btn-instalar-pwa");
+        window.addEventListener("beforeinstallprompt", (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            btnInstalar.classList.remove("hidden");
+        });
+
+        btnInstalar.addEventListener("click", async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            btnInstalar.classList.add("hidden");
+        });
+
+        const estadoRed = document.getElementById("estado-red");
+        function actualizarEstadoRed() {
+            if (!estadoRed) return;
+            if (navigator.onLine) {
+                estadoRed.textContent = "● Online";
+                estadoRed.className = "badge badge-ok";
+            } else {
+                estadoRed.textContent = "● Offline (Local)";
+                estadoRed.className = "badge badge-warn";
+            }
+        }
+        window.addEventListener("online", actualizarEstadoRed);
+        window.addEventListener("offline", actualizarEstadoRed);
+        actualizarEstadoRed();
+
+        // --- LÓGICA DEL SISTEMA SIPRE ---
+        const CONFIG_MODALIDADES = {
+            "Estructural": [
+                { id: "casco", nombre: "CASCO ESTRUCTURAL", tieneCapas: false, modelos: ["MSA Gallet F1 XF", "Bullard Magma", "MSA Cairns 1044", "Otro"] },
+                { id: "chaqueton", nombre: "CHAQUETÓN ESTRUCTURAL", tieneCapas: true, modelos: ["Lion Apparel", "Morning Pride", "Globe", "Otro"] },
+                { id: "pantalon", nombre: "PANTALÓN ESTRUCTURAL", tieneCapas: true, modelos: ["Lion Apparel", "Morning Pride", "Globe", "Otro"] },
+                { id: "botas", nombre: "BOTAS DE CAUCHO / CUERO", tieneCapas: false, modelos: ["Haix Fire Eagle", "Thorogood", "Zeis", "Otro"] },
+                { id: "guantes", nombre: "GUANTES ESTRUCTURALES", tieneCapas: false, modelos: ["Dragon Fire", "Shelby", "Pro-Tech 8", "Otro"] },
+                { id: "hood", nombre: "MONJA / HOOD", tieneCapas: false, modelos: ["Nomex/PBI Negro", "Nomex Blanco/Crema", "Particulado", "Otro"] }
+            ],
+            "Forestal": [
+                { id: "casco_for", nombre: "CASCO FORESTAL", tieneCapas: false, modelos: ["Bullard Wildfire", "MSA V-Gard", "Gallet F2", "Otro"] },
+                { id: "camisa_for", nombre: "CAMISA FORESTAL", tieneCapas: false, modelos: ["Nomex IIIA Amarillo", "Algodón Ignífugo", "Otro"] },
+                { id: "pantalon_for", nombre: "PANTALÓN FORESTAL", tieneCapas: false, modelos: ["Nomex IIIA Verde/Oscuro", "Otro"] },
+                { id: "botas_for", nombre: "BOTAS FORESTALES", tieneCapas: false, modelos: ["Haix Missoula", "Whites", "Danner", "Otro"] },
+                { id: "guantes_for", nombre: "GUANTES FORESTALES", tieneCapas: false, modelos: ["Cuero / Vaqueta", "Shelby Wildland", "Otro"] },
+                { id: "monogafas", nombre: "MONOGAFAS / ANTIPARRAS", tieneCapas: false, modelos: ["ESS Striker", "3M", "Otro"] }
+            ],
+            "Táctico / USAR": [
+                { id: "casco_usar", nombre: "CASCO RESCATE / USAR", tieneCapas: false, modelos: ["Petzl Vertex", "MSA Gallet F2 X-TREM", "Kask Superplasma", "Otro"] },
+                { id: "overol_usar", nombre: "OVEROL / UNIFORME USAR", tieneCapas: false, modelos: ["5.11 Tactical", "Tru-Spec", "Otro"] },
+                { id: "botas_usar", nombre: "BOTAS TÁCTICAS / RESCATE", tieneCapas: false, modelos: ["Haix Airpower", "5.11 ATAC", "Bates", "Otro"] },
+                { id: "guantes_usar", nombre: "GUANTES EXTRICACIÓN / RESCATE", tieneCapas: false, modelos: ["Ringers", "Mechanix", "HexArmor", "Otro"] },
+                { id: "rodilleras", nombre: "RODILLERAS Y CODERAS", tieneCapas: false, modelos: ["Alta", "Hatch", "5.11", "Otro"] }
+            ]
+        };
+
+        let modalidadActual = "Estructural";
+        let inspectorActual = "";
+        let registros = [];
+        try {
+            registros = JSON.parse(localStorage.getItem("sipre_registros")) || [];
+        } catch (e) {
+            registros = [];
+        }
+
+        const loginScreen = document.getElementById("login-screen");
+        const appScreen = document.getElementById("app-screen");
+        const formLogin = document.getElementById("form-login");
+        const contenedorPrendas = document.getElementById("contenedor-prendas");
+        const fechaInput = document.getElementById("fecha_inspeccion");
+
+        if (fechaInput) {
+            fechaInput.valueAsDate = new Date();
+        }
+        actualizarContador();
+
+        function entrarAlSistema(usuarioTexto) {
+            inspectorActual = (usuarioTexto && usuarioTexto.trim()) ? usuarioTexto.trim() : "Inspector";
+            document.querySelector("#user-display strong").textContent = inspectorActual;
+            loginScreen.classList.add("hidden");
+            appScreen.classList.remove("hidden");
+            renderizarPrendas(modalidadActual);
+        }
+
+        formLogin.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const userVal = document.getElementById("username").value;
+            entrarAlSistema(userVal);
+        });
+
+        document.getElementById("btn-logout").addEventListener("click", () => {
+            appScreen.classList.add("hidden");
+            loginScreen.classList.remove("hidden");
+            formLogin.reset();
+        });
+
+        document.querySelectorAll(".nav-tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                const tipo = tab.dataset.tipo;
+                if (tipo === "Historial") {
+                    document.getElementById("vista-formulario").classList.add("hidden");
+                    document.getElementById("vista-historial").classList.remove("hidden");
+                    renderizarTablaHistorial();
+                } else {
+                    modalidadActual = tipo;
+                    document.getElementById("titulo-modalidad").textContent = tipo;
+                    document.getElementById("vista-historial").classList.add("hidden");
+                    document.getElementById("vista-formulario").classList.remove("hidden");
+                    renderizarPrendas(tipo);
+                }
+            });
+        });
+
+        function renderizarPrendas(modalidad) {
+            contenedorPrendas.innerHTML = "";
+            const prendas = CONFIG_MODALIDADES[modalidad];
+            const anioActual = new Date().getFullYear();
+
+            prendas.forEach(p => {
+                const opcionesModelo = p.modelos.map(m => `<option value="${m}">${m}</option>`).join("");
+                const htmlCapas = p.tieneCapas ? `
+                    <div class="row-inline">
+                        <label class="lbl-title">Capa Exterior:</label>
+                        <select name="ext_${p.id}" class="select-sm estado-select" data-prenda="${p.id}">
+                            <option value="Bueno">Bueno</option>
+                            <option value="Regular">Regular</option>
+                            <option value="Malo">Malo</option>
+                        </select>
+                        <div class="check-group">
+                            <label><input type="checkbox" name="danos_ext_${p.id}" value="Calor"> Calor</label>
+                            <label><input type="checkbox" name="danos_ext_${p.id}" value="Cortes"> Cortes</label>
+                            <label><input type="checkbox" name="danos_ext_${p.id}" value="Uso"> Desgaste</label>
+                        </div>
+                    </div>
+                    <div class="row-inline">
+                        <label class="lbl-title">Barrera Int.:</label>
+                        <select name="int_${p.id}" class="select-sm estado-select" data-prenda="${p.id}">
+                            <option value="Bueno">Bueno</option>
+                            <option value="Regular">Regular</option>
+                            <option value="Malo">Malo</option>
+                        </select>
+                        <div class="check-group">
+                            <label><input type="checkbox" name="danos_int_${p.id}" value="Humedad"> Humedad</label>
+                            <label><input type="checkbox" name="danos_int_${p.id}" value="Cortes"> Cortes</label>
+                            <label><input type="checkbox" name="danos_int_${p.id}" value="Uso"> Desgaste</label>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="row-inline">
+                        <label class="lbl-title">Estado Gral.:</label>
+                        <select name="estado_${p.id}" class="select-sm estado-select" data-prenda="${p.id}">
+                            <option value="Bueno">Bueno</option>
+                            <option value="Regular">Regular</option>
+                            <option value="Malo">Malo</option>
+                        </select>
+                        <div class="check-group">
+                            <label><input type="checkbox" name="danos_${p.id}" value="Calor"> Calor</label>
+                            <label><input type="checkbox" name="danos_${p.id}" value="Cortes"> Golpes/Cortes</label>
+                            <label><input type="checkbox" name="danos_${p.id}" value="Uso"> Uso</label>
+                        </div>
+                    </div>
+                `;
+
+                const fieldset = document.createElement("fieldset");
+                fieldset.className = "prenda-box";
+                fieldset.id = `box_${p.id}`;
+                fieldset.innerHTML = `
+                    <legend>${p.nombre}</legend>
+                    <div class="row-inline">
+                        <label class="lbl-title">¿Posee?:</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="posee_${p.id}" value="SI" checked onchange="togglePrenda('${p.id}', true)"> Sí</label>
+                            <label><input type="radio" name="posee_${p.id}" value="NO" onchange="togglePrenda('${p.id}', false)"> No</label>
+                        </div>
+                    </div>
+                    <div id="sub_${p.id}" class="sub-fields">
+                        <div class="row-inline">
+                            <label class="lbl-title">Modelo:</label>
+                            <select name="modelo_${p.id}" class="select-sm">${opcionesModelo}</select>
+                            <input type="text" name="talla_${p.id}" class="select-sm" placeholder="Talla" style="width: 65px;">
+                            <input type="number" name="anio_${p.id}" class="select-sm anio-input" data-prenda="${p.id}" placeholder="Año Fab." min="2005" max="${anioActual}" style="width: 90px;">
+                        </div>
+                        ${htmlCapas}
+                        <div class="row-inline" style="margin-top: 0.5rem;">
+                            <label class="lbl-title">¿Req. Cambio?:</label>
+                            <div class="radio-group">
+                                <label><input type="radio" id="cambio_si_${p.id}" name="cambio_${p.id}" value="SI" onchange="evaluarAlerta('${p.id}')"> Sí</label>
+                                <label><input type="radio" id="cambio_no_${p.id}" name="cambio_${p.id}" value="NO" checked onchange="evaluarAlerta('${p.id}')"> No</label>
+                            </div>
+                        </div>
+                        <div id="warn_${p.id}" class="nfpa-warning">⚠️ Alerta NFPA 1851: Prenda vencida (>10 años) o en mal estado. Se recomienda reemplazo.</div>
+                        <div style="margin-top: 0.5rem;">
+                            <label for="obs_${p.id}" style="font-size: 0.85rem; font-weight: 600;">Observaciones / N° Serie:</label>
+                            <textarea id="obs_${p.id}" name="obs_${p.id}" class="obs-box" rows="2" placeholder="N° de serie, novedades específicas..."></textarea>
+                        </div>
+                    </div>
+                `;
+                contenedorPrendas.appendChild(fieldset);
+            });
+
+            document.querySelectorAll(".anio-input, .estado-select").forEach(el => {
+                el.addEventListener("change", (e) => verificarReglasNFPA(e.target.dataset.prenda));
+            });
+        }
+
+        window.togglePrenda = function(id, posee) {
+            const sub = document.getElementById(`sub_${id}`);
+            const box = document.getElementById(`box_${id}`);
+            if (posee) {
+                sub.classList.remove("disabled");
+                evaluarAlerta(id);
+            } else {
+                sub.classList.add("disabled");
+                box.classList.add("alerta-cambio");
+            }
+        };
+
+        function verificarReglasNFPA(id) {
+            const anioInput = document.querySelector(`input[name="anio_${id}"]`);
+            const estados = document.querySelectorAll(`.estado-select[data-prenda="${id}"]`);
+            const anioActual = new Date().getFullYear();
+
+            const vencido = anioInput && anioInput.value && (anioActual - parseInt(anioInput.value) >= 10);
+            const malEstado = Array.from(estados).some(sel => sel.value === "Malo");
+
+            if (vencido || malEstado) {
+                document.getElementById(`cambio_si_${id}`).checked = true;
+                document.getElementById(`warn_${id}`).style.display = "block";
+            } else {
+                document.getElementById(`warn_${id}`).style.display = "none";
+            }
+            evaluarAlerta(id);
+        }
+
+        window.evaluarAlerta = function(id) {
+            const reqCambio = document.getElementById(`cambio_si_${id}`).checked;
+            const box = document.getElementById(`box_${id}`);
+            box.classList.toggle("alerta-cambio", reqCambio);
+        };
+
+        document.getElementById("form-inspeccion").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const prendasConfig = CONFIG_MODALIDADES[modalidadActual];
+            const detallePrendas = [];
+            const alertas = [];
+
+            prendasConfig.forEach(p => {
+                const posee = document.querySelector(`input[name="posee_${p.id}"]:checked`).value;
+                const modelo = document.querySelector(`select[name="modelo_${p.id}"]`).value;
+                const anio = document.querySelector(`input[name="anio_${p.id}"]`).value || "N/R";
+                const cambio = document.querySelector(`input[name="cambio_${p.id}"]:checked`).value;
+                const obs = document.getElementById(`obs_${p.id}`).value.trim();
+
+                if (posee === "NO") alertas.push(`${p.nombre} (No posee)`);
+                else if (cambio === "SI") alertas.push(`${p.nombre} (Req. Cambio)`);
+
+                detallePrendas.push({ prenda: p.nombre, posee, modelo, anio, cambio, obs });
+            });
+
+            const nuevoRegistro = {
+                id: Date.now(),
+                fecha: document.getElementById("fecha_inspeccion").value,
+                inspector: inspectorActual,
+                modalidad: modalidadActual,
+                bombero: document.getElementById("bombero_nombre").value.trim(),
+                cedula: document.getElementById("bombero_cedula").value.trim(),
+                estacion: document.getElementById("bombero_estacion").value,
+                alertas: alertas.length > 0 ? alertas.join(", ") : "Sin novedades",
+                detalle: detallePrendas
+            };
+
+            registros.unshift(nuevoRegistro);
+            try {
+                localStorage.setItem("sipre_registros", JSON.stringify(registros));
+            } catch (err) {
+                console.warn("No se pudo guardar en localStorage:", err);
+            }
+            actualizarContador();
+
+            alert(`✅ Inspección de ${nuevoRegistro.bombero} guardada correctamente.`);
+            e.target.reset();
+            fechaInput.valueAsDate = new Date();
+            renderizarPrendas(modalidadActual);
+        });
+
+        function actualizarContador() {
+            document.getElementById("count-registros").textContent = registros.length;
+        }
+
+        function renderizarTablaHistorial() {
+            const tbody = document.querySelector("#tabla-historial tbody");
+            tbody.innerHTML = "";
+
+            if (registros.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#6b7280;">No hay inspecciones registradas todavía.</td></tr>`;
+                return;
+            }
+
+            registros.forEach(reg => {
+                const tieneAlertas = reg.alertas !== "Sin novedades";
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${reg.fecha}</td>
+                    <td><strong>${reg.modalidad}</strong></td>
+                    <td>${reg.bombero}<br><small style="color:#6b7280;">CI: ${reg.cedula}</small></td>
+                    <td>${reg.estacion}</td>
+                    <td><span class="badge ${tieneAlertas ? 'badge-danger' : 'badge-ok'}">${reg.alertas}</span></td>
+                    <td><button type="button" class="btn btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="eliminarRegistro(${reg.id})">Eliminar</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.eliminarRegistro = function(id) {
+            if (confirm("¿Desea eliminar este registro?")) {
+                registros = registros.filter(r => r.id !== id);
+                try {
+                    localStorage.setItem("sipre_registros", JSON.stringify(registros));
+                } catch (err) {}
+                actualizarContador();
+                renderizarTablaHistorial();
+            }
+        };
+
+        document.getElementById("btn-borrar-todo").addEventListener("click", () => {
+            if (registros.length > 0 && confirm("¿Está seguro de borrar todo el historial local?")) {
+                registros = [];
+                try {
+                    localStorage.setItem("sipre_registros", JSON.stringify(registros));
+                } catch (err) {}
+                actualizarContador();
+                renderizarTablaHistorial();
+            }
+        });
+
+        document.getElementById("btn-exportar-csv").addEventListener("click", () => {
+            if (registros.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            let csv = "\uFEFFFecha;Inspector;Modalidad;Bombero;Cedula;Estacion;Prenda;Posee;Modelo;Anio_Fab;Requiere_Cambio;Observaciones\n";
+            registros.forEach(r => {
+                r.detalle.forEach(d => {
+                    const obsLimpia = d.obs.replace(/(\r\n|\n|\r|;)/gm, " ");
+                    csv += `${r.fecha};${r.inspector};${r.modalidad};${r.bombero};${r.cedula};${r.estacion};${d.prenda};${d.posee};${d.modelo};${d.anio};${d.cambio};${obsLimpia}\n`;
+                });
+            });
+
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `SIPRE_Reporte_EPP_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
